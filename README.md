@@ -2,12 +2,6 @@
 
 A small e-commerce website built to practise web development, database integration, and end-to-end (E2E) testing with Playwright.
 
-## Why E2E Testing?
-
-End-to-end testing checks whether a website works from the user's point of view. Playwright automates a browser to test real user journeys, such as viewing products, adding items to the shopping cart, changing quantities, and removing products.
-
-These tests help catch problems with the website's functionality before changes are released.
-
 ## Features
 
 - Products loaded from Supabase
@@ -39,7 +33,7 @@ This option runs the tests against the deployed Vercel website. You do not need 
 1. Clone the repository:
 
    ```bash
-   git clone REPOSITORY_URL
+   git clone "https://github.com/Parma139/Complete-JavaScript-Course-Master-Parma.git"
    cd playwright-ecommerce-project
    ```
 
