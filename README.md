@@ -57,7 +57,7 @@ I used AI as a learning assistant to help me understand concepts, troubleshoot e
 
 ## Live Demo
 
-Try the website: https://YOUR-VERCEL-URL.vercel.app
+Try the website: https://playwright-ecommerce-project-1xy3.vercel.app/
 
 ## What's Next?
 
