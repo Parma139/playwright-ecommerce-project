@@ -39,7 +39,7 @@ This option runs the tests against the deployed Vercel website. You do not need 
 1. Clone the repository:
 
    ```bash
-   git clone YOUR_GITHUB_REPOSITORY_URL
+   git clone REPOSITORY_URL
    cd playwright-ecommerce-project
    ```
 
