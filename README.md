@@ -55,8 +55,11 @@ npx playwright test --headed
 
 I used AI as a learning assistant to help me understand concepts, troubleshoot errors, and improve my tests. I ran the application and tests myself to check that everything worked as expected.
 
+## Live Demo
+
+Try the website: https://YOUR-VERCEL-URL.vercel.app
+
 ## What's Next?
 
-- Deploy the website
 - Set up GitHub Actions to run tests automatically
 - Add screenshots and improve the project documentation
