@@ -9,6 +9,7 @@ A small e-commerce website built to practise web development, database integrati
 - Stock limit handling
 - Automated tests for product display, cart functionality, and stock limits
 - Support for testing the live website or a local development version
+- GitHub Actions CI to automatically build the application and run Playwright tests on pull requests
 
 ## Tech Stack
 
@@ -33,7 +34,7 @@ This option runs the tests against the deployed Vercel website. You do not need 
 1. Clone the repository:
 
    ```bash
-   git clone "https://github.com/Parma139/Complete-JavaScript-Course-Master-Parma.git"
+   git clone "https://github.com/Parma139/playwright-ecommerce-project.git"
    cd playwright-ecommerce-project
    ```
 
@@ -103,9 +104,11 @@ npm run test:e2e -- --debug
 
 ## Using AI
 
-I used AI as a learning assistant to understand concepts, troubleshoot errors, and improve my tests. I ran the application and tests myself to check that everything worked as expected.
+I used AI as a development tool to build and improve the application, troubleshoot problems, and explore different solutions. I tested the functionality, verified the results, and refined the implementation to ensure the features worked as expected. I also used Playwright to automate end-to-end tests and GitHub Actions to run the tests automatically on pull requests.
 
 ## What's Next?
 
-- Set up GitHub Actions to run tests automatically
-- Add screenshots and improve the project documentation
+- Add login and logout functionality
+- Create a checkout and payment interface
+- Improve the user interface and overall shopping experience
+- Expand automated tests to cover login, logout, and checkout functionality
