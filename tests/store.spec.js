@@ -1,7 +1,19 @@
 import { test, expect } from "@playwright/test";
 
-test("store displays products from Supabase", async ({ page }) => {
+async function login(page) {
   await page.goto("/");
+
+  await page.getByLabel("Username").fill("testuser");
+  await page.getByLabel("Password").fill("testuser");
+  await page.getByRole("button", { name: "Log in" }).click();
+
+  await expect(
+    page.getByRole("heading", { name: "Welcome to QA Shop" }),
+  ).toBeVisible();
+}
+
+test("store displays products from Supabase", async ({ page }) => {
+  await login(page);
 
   await expect(
     page.getByRole("heading", { name: "QA Shop", exact: true }),
@@ -17,7 +29,7 @@ test("store displays products from Supabase", async ({ page }) => {
 test("adding a laptop updates cart count, total and stock", async ({
   page,
 }) => {
-  await page.goto("/");
+  await login(page);
 
   // Confirm the cart starts empty
   await expect(page.getByTestId("cart-count")).toHaveText("0");
@@ -49,7 +61,7 @@ test("adding a laptop updates cart count, total and stock", async ({
 test("increasing quantity updates the cart total and stock", async ({
   page,
 }) => {
-  await page.goto("/");
+  await login(page);
 
   const laptop = page.getByTestId("product-card").filter({
     has: page.getByRole("heading", {
@@ -76,7 +88,7 @@ test("increasing quantity updates the cart total and stock", async ({
 });
 
 test("removing a product empties the cart", async ({ page }) => {
-  await page.goto("/");
+  await login(page);
 
   const laptop = page.getByTestId("product-card").filter({
     has: page.getByRole("heading", {
@@ -103,7 +115,7 @@ test("removing a product empties the cart", async ({ page }) => {
 });
 
 test("cannot add more laptops than available stock", async ({ page }) => {
-  await page.goto("/");
+  await login(page);
 
   const laptop = page.getByTestId("product-card").filter({
     has: page.getByRole("heading", {
@@ -130,7 +142,7 @@ test("cannot add more laptops than available stock", async ({ page }) => {
 });
 
 test("cannot decrease a cart quantity below one", async ({ page }) => {
-  await page.goto("/");
+  await login(page);
 
   const laptop = page.getByTestId("product-card").filter({
     has: page.getByRole("heading", {

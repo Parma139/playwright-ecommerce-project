@@ -1,7 +1,7 @@
 :root {
   font-family: Inter, "Segoe UI", Arial, sans-serif;
   color: #172337;
-  background: #f3f6fb;
+  background: #f7f9fc;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -16,7 +16,29 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #f3f6fb;
+  background-color: #f7f9fc;
+  background-image:
+    radial-gradient(
+      circle at 10% 10%,
+      rgba(59, 130, 246, 0.16),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 90% 35%,
+      rgba(20, 184, 166, 0.13),
+      transparent 30%
+    ),
+    linear-gradient(
+      135deg,
+      transparent 49.5%,
+      rgba(100, 116, 139, 0.07) 50%,
+      transparent 50.5%
+    );
+  background-size:
+    auto,
+    auto,
+    36px 36px;
+  background-attachment: fixed;
 }
 
 button {
@@ -344,5 +366,195 @@ button:disabled {
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Login screen */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  width: min(440px, 100%);
+  padding: 32px;
+  border: 1px solid #e0e7f0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
+}
+
+.login-heading {
+  margin-bottom: 28px;
+  padding: 20px;
+  border-radius: 12px;
+  background: #0b1220;
+  color: #fff;
+}
+
+.login-heading h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.login-heading p {
+  margin-bottom: 0;
+  color: #a8b7cc;
+}
+
+.login-card h2 {
+  margin-bottom: 8px;
+}
+
+.login-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-card label {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.login-card input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.login-card input:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.login-card [role="alert"] {
+  color: #be123c;
+  font-size: 14px;
+}
+
+.demo-note {
+  margin: 20px 0 0;
+  color: #66758b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 540px) {
+  .login-card {
+    padding: 22px;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
+/* Technology-inspired dark brand headers */
+
+.header,
+.login-heading {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: linear-gradient(115deg, #0b1220 0%, #182943 48%, #0b1220 100%);
+}
+
+/* Subtle tech-grid overlay */
+.header::before,
+.login-heading::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 50px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+    radial-gradient(
+      ellipse at 85% 15%,
+      rgba(59, 130, 246, 0.16),
+      transparent 55%
+    );
+  background-size:
+    28px 28px,
+    28px 28px,
+    auto;
+}
+
+/* Keep text and controls above the overlay */
+.header > *,
+.login-heading > * {
+  position: relative;
+  z-index: 1;
+}
+
+.header h1,
+.login-heading h1 {
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: -0.7px;
+}
+
+/* Keep header content above its texture */
+.header > *,
+.login-heading > * {
+  position: relative;
+  z-index: 1;
+}
+
+.header h1,
+.login-heading h1 {
+  color: #ffffff;
+  font-weight: 800;
+  letter-spacing: -0.7px;
+}
+
+/* Signed-in account identity */
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.user-email {
+  max-width: 240px;
+  overflow-wrap: anywhere;
+  color: #dbeafe;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Keep the header usable on narrow screens */
+@media (max-width: 540px) {
+  .header-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .user-email {
+    max-width: 100%;
+  }
+}
+
+/* Respect reduced-motion preferences; the texture is static */
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .login-heading {
+    transition: none;
   }
 }
