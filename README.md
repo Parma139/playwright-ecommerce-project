@@ -7,6 +7,9 @@ A small e-commerce website built to practise web development, database integrati
 - Products loaded from Supabase
 - Shopping cart with quantity controls and totals
 - Stock limit handling
+- Login and logout functionality using Supabase Authentication
+- Session persistence after page refresh
+- Demo login with username and password hints on the login page
 - Automated tests for product display, cart functionality, and stock limits
 - Support for testing the live website or a local development version
 - GitHub Actions CI to automatically build the application and run Playwright tests on pull requests
@@ -105,10 +108,10 @@ npm run test:e2e -- --debug
 ## Using AI
 
 I used AI as a development tool to build and improve the application, troubleshoot problems, and explore different solutions. I tested the functionality, verified the results, and refined the implementation to ensure the features worked as expected. I also used Playwright to automate end-to-end tests and GitHub Actions to run the tests automatically on pull requests.
+I also used Playwright to automate end-to-end tests for the shop, login, logout, and session persistence, and GitHub Actions to run the tests automatically on pull requests.
 
 ## What's Next?
 
-- Add login and logout functionality
 - Create a checkout and payment interface
 - Improve the user interface and overall shopping experience
-- Expand automated tests to cover login, logout, and checkout functionality
+- Expand automated tests to cover checkout functionality
