@@ -1,5 +1,6 @@
 import React from "react";
 import { supabase } from "./supabase.js";
+import Checkout from "./components/Checkout.jsx";
 import "./style.css";
 
 // Public demo login mapping. Supabase verifies the password.
@@ -19,6 +20,7 @@ export default function App() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
   const [cartMessage, setCartMessage] = React.useState("");
+  const [orderConfirmation, setOrderConfirmation] = React.useState(null);
 
   // Restore the Supabase session after refresh and listen for auth changes.
   React.useEffect(() => {
@@ -188,6 +190,27 @@ export default function App() {
     setCartMessage("Product removed from cart.");
   }
 
+  async function handleOrderSuccess(order) {
+    // Save the confirmation details.
+    setOrderConfirmation(order);
+
+    // Clear the cart after a successful order.
+    setCart([]);
+    setCartMessage("");
+
+    // Refresh products and stock from Supabase.
+    const { data, error: productError } = await supabase
+      .from("products")
+      .select("id, name, description, price, stock")
+      .order("id");
+
+    if (productError) {
+      setError("Order placed, but product stock could not be refreshed.");
+      return;
+    }
+
+    setProducts(data ?? []);
+  }
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const cartTotal = cart.reduce(
@@ -402,6 +425,53 @@ export default function App() {
           </>
         )}
       </section>
+
+      {/* Checkout */}
+      {cart.length > 0 && !orderConfirmation && (
+        <Checkout items={cart} onOrderSuccess={handleOrderSuccess} />
+      )}
+
+      {/* Successful order confirmation */}
+      {orderConfirmation && (
+        <section
+          className="checkout-section"
+          aria-label="Order confirmation"
+          role="status"
+        >
+          <h2>Order Confirmed!</h2>
+
+          <p>Your order has been successfully placed.</p>
+
+          <p>
+            <strong>Order number:</strong> QA-
+            {orderConfirmation.order_id.slice(0, 8).toUpperCase()}
+          </p>
+
+          <p>
+            <strong>Total:</strong> £
+            {Number(orderConfirmation.order_total).toFixed(2)}
+          </p>
+
+          <p>
+            <strong>Payment method:</strong>{" "}
+            {orderConfirmation.selected_payment_method === "demo_card"
+              ? "Demo Card"
+              : "Cash on Delivery"}
+          </p>
+
+          <p>
+            <strong>Order status:</strong> {orderConfirmation.order_status}
+          </p>
+
+          <p>
+            <strong>Payment status:</strong> {orderConfirmation.payment_status}
+          </p>
+
+          <button type="button" onClick={() => setOrderConfirmation(null)}>
+            Continue Shopping
+          </button>
+        </section>
+      )}
     </main>
   );
 }
