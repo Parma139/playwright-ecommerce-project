@@ -63,3 +63,42 @@ export async function createDemoOrder({
     checkoutId,
   };
 }
+/**
+ * Retrieves order history for the logged-in customer.
+ */
+export async function getOrderHistory() {
+  const { data: sessionData, error: sessionError } =
+    await supabase.auth.getSession();
+
+  if (sessionError) throw sessionError;
+
+  if (!sessionData.session) {
+    throw new Error("Please log in to view your orders.");
+  }
+
+  const { data, error } = await supabase
+    .from("orders")
+    .select(
+      `
+      id,
+      created_at,
+      total,
+      payment_method,
+      status,
+      payment_status,
+      order_items (
+        id,
+        product_id,
+        product_name,
+        unit_price,
+        quantity,
+        line_total
+      )
+    `,
+    )
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return data;
+}

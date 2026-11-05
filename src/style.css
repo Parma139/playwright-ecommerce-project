@@ -79,6 +79,9 @@ button:disabled {
 
 /* Store header */
 .header {
+  position: sticky;
+  top: 12px;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -323,7 +326,10 @@ button:disabled {
   }
 
   .container {
-    padding: 18px 16px 36px;
+    width: min(1180px, 100%);
+    margin: 0 auto;
+    padding: 28px 24px 48px;
+    overflow: visible;
   }
 }
 
@@ -666,4 +672,118 @@ button:disabled {
   .checkout-summary {
     padding: 14px;
   }
+}
+
+/* Order History */
+.order-history {
+  margin-top: 30px;
+}
+
+.order-list {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.order-card {
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.order-card-header,
+.order-card-summary,
+.order-detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.order-card-header {
+  margin-bottom: 16px;
+}
+
+.order-card-header h3 {
+  margin: 0 0 5px;
+}
+
+.order-card-header p {
+  margin: 0;
+  color: #64748b;
+}
+
+.order-card-summary {
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.order-status {
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: #e2e8f0;
+  color: #334155;
+  text-transform: capitalize;
+  font-size: 13px;
+}
+
+.order-details {
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.order-detail-item {
+  padding: 9px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+@media (max-width: 600px) {
+  .order-card-header,
+  .order-card-summary,
+  .order-detail-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+/* Main navigation */
+.main-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.main-navigation button {
+  background: rgba(255, 255, 255, 0.08);
+  color: #dbeafe;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 9px;
+  padding: 11px 15px;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.main-navigation button:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: #60a5fa;
+  transform: none;
+}
+
+.main-navigation button.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.header-actions button {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.header-actions button:hover:not(:disabled) {
+  background: #b91c1c;
 }
