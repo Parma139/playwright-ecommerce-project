@@ -7,6 +7,14 @@ A small e-commerce website built to practise web development, database integrati
 - Products loaded from Supabase
 - Shopping cart with quantity controls and totals
 - Stock limit handling
+- Checkout process with delivery details and order summary
+- Demo Card and Cash on Delivery payment options
+- Simulated card payment success and failure scenarios
+- Order confirmation after successful checkout
+- Order history with order details and payment status
+- Order cancellation with automatic stock restoration
+- Order status persistence after page refresh
+- Automated Playwright tests covering authentication, store, basket, checkout, payment, order history, and cancellation
 - Login and logout functionality using Supabase Authentication
 - Session persistence after page refresh
 - Demo login with username and password hints on the login page
@@ -21,6 +29,23 @@ A small e-commerce website built to practise web development, database integrati
 - Playwright
 - Git and GitHub
 - Vercel
+- GitHub Actions for CI
+
+## Automated Test Coverage
+
+The project uses Playwright to test the main e-commerce workflows.
+
+| Test Suite         | Coverage                                                    |
+| ------------------ | ----------------------------------------------------------- |
+| Authentication     | Login, logout and session persistence                       |
+| Store              | Product display and stock availability                      |
+| Basket             | Adding products, quantity controls and totals               |
+| Checkout           | Checkout flow and delivery details                          |
+| Payment            | Demo Card, Cash on Delivery and payment failure             |
+| Order History      | Viewing orders and expanding order details                  |
+| Order Cancellation | Cancelling orders, stock restoration and status persistence |
+
+Tests can run against either the deployed Vercel application or a local development environment.
 
 ## Live Demo
 
@@ -107,11 +132,15 @@ npm run test:e2e -- --debug
 
 ## Using AI
 
-I used AI as a development tool to build and improve the application, troubleshoot problems, and explore different solutions. I tested the functionality, verified the results, and refined the implementation to ensure the features worked as expected. I also used Playwright to automate end-to-end tests and GitHub Actions to run the tests automatically on pull requests.
-I also used Playwright to automate end-to-end tests for the shop, login, logout, and session persistence, and GitHub Actions to run the tests automatically on pull requests.
+I used AI as a development tool to build and improve the application, troubleshoot problems, and explore different solutions.
+
+I tested the functionality, verified the results, and refined the implementation to ensure the features worked as expected. I also used Playwright to automate end-to-end tests across the main e-commerce workflows and GitHub Actions to run automated checks in CI.
 
 ## What's Next?
 
-- Create a checkout and payment interface
+- Implement API testing using Playwright API testing or REST Assured
+- Validate API endpoints, HTTP status codes, response bodies and error handling
+- Integrate API tests into GitHub Actions CI
 - Improve the user interface and overall shopping experience
-- Expand automated tests to cover checkout functionality
+- Expand automated test coverage with additional edge cases
+- Improve CI reporting and test result visibility

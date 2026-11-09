@@ -1,6 +1,10 @@
 import React from "react";
 import { supabase } from "./supabase.js";
+import Checkout from "./components/Checkout.jsx";
 import "./style.css";
+import OrderHistory from "./components/OrderHistory.jsx";
+import Basket from "./components/Basket.jsx";
+import OrderConfirmation from "./components/OrderConfirmation.jsx";
 
 // Public demo login mapping. Supabase verifies the password.
 const DEMO_USERNAME = "testuser";
@@ -19,6 +23,30 @@ export default function App() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
   const [cartMessage, setCartMessage] = React.useState("");
+  const [orderConfirmation, setOrderConfirmation] = React.useState(null);
+  const [currentPage, setCurrentPage] = React.useState("shop");
+
+  React.useEffect(() => {
+    async function handlePopState() {
+      const page = window.history.state?.page || "shop";
+
+      if (page === "shop" || page === "basket") {
+        try {
+          await refreshProducts();
+        } catch {
+          setError("Could not refresh product information. Please try again.");
+        }
+      }
+
+      setCurrentPage(page);
+    }
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
 
   // Restore the Supabase session after refresh and listen for auth changes.
   React.useEffect(() => {
@@ -188,6 +216,48 @@ export default function App() {
     setCartMessage("Product removed from cart.");
   }
 
+  // Refresh product data after stock changes, including order cancellation.
+  async function refreshProducts() {
+    const { data, error: productError } = await supabase
+      .from("products")
+      .select("id, name, description, price, stock")
+      .order("id");
+
+    if (productError) {
+      setError("Product stock could not be refreshed.");
+      throw productError;
+    }
+
+    setProducts(data ?? []);
+  }
+
+  async function handleOrderSuccess(order) {
+    setOrderConfirmation(order);
+    setCart([]);
+    setCartMessage("");
+    navigateTo("confirmation");
+
+    try {
+      await refreshProducts();
+    } catch {
+      setError("Order placed, but product stock could not be refreshed.");
+    }
+  }
+
+  async function navigateTo(page) {
+    window.history.pushState({ page }, "", `#${page}`);
+
+    if (page === "shop" || page === "basket") {
+      try {
+        await refreshProducts();
+      } catch {
+        setError("Could not refresh product information. Please try again.");
+      }
+    }
+
+    setCurrentPage(page);
+  }
+
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const cartTotal = cart.reduce(
@@ -258,23 +328,40 @@ export default function App() {
   }
 
   return (
-    <main className="container">
+    <main className="container app-container">
       <header className="header">
         <div className="header-brand">
           <h1>QA Shop</h1>
         </div>
 
+        <nav className="main-navigation" aria-label="Main navigation">
+          <button
+            type="button"
+            className={currentPage === "shop" ? "active" : ""}
+            onClick={() => navigateTo("shop")}
+          >
+            Shop
+          </button>
+
+          <button
+            type="button"
+            className={currentPage === "orders" ? "active" : ""}
+            onClick={() => navigateTo("orders")}
+          >
+            My Orders
+          </button>
+          <button
+            type="button"
+            className={currentPage === "basket" ? "active" : ""}
+            onClick={() => navigateTo("basket")}
+          >
+            🛒 Basket ({cartCount})
+          </button>
+        </nav>
         <div className="header-actions">
           <span className="user-email" aria-label="Signed-in account">
             {user.email}
           </span>
-
-          <div
-            className="cart"
-            aria-label={`Shopping cart, ${cartCount} items`}
-          >
-            🛒 Cart: <span data-testid="cart-count">{cartCount}</span>
-          </div>
 
           <button type="button" onClick={handleLogout}>
             Log out
@@ -282,126 +369,98 @@ export default function App() {
         </div>
       </header>
 
-      {authError && <p role="alert">{authError}</p>}
+      <div className="page-content">
+        {authError && <p role="alert">{authError}</p>}
 
-      <section className="welcome">
-        <h2>Welcome to QA Shop</h2>
-        <p>Explore our products and test your shopping experience.</p>
-      </section>
-
-      {loading && <p role="status">Loading products...</p>}
-      {error && <p role="alert">Could not load products: {error}</p>}
-
-      {!loading && !error && products.length === 0 && <p>No products found.</p>}
-
-      {!loading && !error && products.length > 0 && (
-        <section className="products" aria-label="Products">
-          {products.map((product) => {
-            const quantityInCart =
-              cart.find((item) => item.id === product.id)?.quantity ?? 0;
-            const outOfStock = quantityInCart >= product.stock;
-
-            return (
-              <article
-                className="product-card"
-                key={product.id}
-                data-testid="product-card"
-              >
-                <div className="product-image" aria-hidden="true">
-                  {product.name === "Laptop"
-                    ? "💻"
-                    : product.name === "Keyboard"
-                      ? "⌨️"
-                      : "🖱️"}
-                </div>
-
-                <h3>{product.name}</h3>
-                <p>{product.description}</p>
-                <p className="price">£{Number(product.price).toFixed(2)}</p>
-                <p className="stock">
-                  In stock: {product.stock - quantityInCart}
-                </p>
-
-                <button
-                  type="button"
-                  aria-label={`Add ${product.name} to cart`}
-                  disabled={product.stock === 0 || outOfStock}
-                  onClick={() => addToCart(product)}
-                >
-                  {product.stock === 0
-                    ? "Out of Stock"
-                    : outOfStock
-                      ? "Stock Limit Reached"
-                      : "Add to Cart"}
-                </button>
-              </article>
-            );
-          })}
-        </section>
-      )}
-
-      <section className="cart-section" aria-label="Shopping cart">
-        <h2>Your Shopping Cart</h2>
-
-        <p role="status" aria-live="polite">
-          {cartMessage}
-        </p>
-
-        {cart.length === 0 ? (
-          <p data-testid="empty-cart">Your cart is empty.</p>
+        {currentPage === "confirmation" ? (
+          <OrderConfirmation
+            order={orderConfirmation}
+            onContinueShopping={() => {
+              setOrderConfirmation(null);
+              navigateTo("shop");
+            }}
+          />
+        ) : currentPage === "orders" ? (
+          <OrderHistory onOrderCancelled={refreshProducts} />
+        ) : currentPage === "basket" ? (
+          <Basket
+            items={cart}
+            products={products}
+            onChangeQuantity={changeQuantity}
+            onRemove={removeFromCart}
+            onContinueShopping={() => navigateTo("shop")}
+            onProceedToCheckout={() => navigateTo("checkout")}
+          />
+        ) : currentPage === "checkout" ? (
+          cart.length > 0 ? (
+            <Checkout items={cart} onOrderSuccess={handleOrderSuccess} />
+          ) : (
+            <p>Your basket is empty.</p>
+          )
         ) : (
           <>
-            {cart.map((item) => (
-              <article className="cart-item" key={item.id}>
-                <div>
-                  <h3>{item.name}</h3>
-                  <p>£{Number(item.price).toFixed(2)} each</p>
-                  <p>
-                    Subtotal: £{(Number(item.price) * item.quantity).toFixed(2)}
-                  </p>
-                </div>
+            <section className="welcome">
+              <h2>Welcome to QA Shop</h2>
+              <p>Explore our products and test your shopping experience.</p>
+            </section>
 
-                <div className="cart-actions">
-                  <button
-                    type="button"
-                    aria-label={`Decrease ${item.name} quantity`}
-                    disabled={item.quantity <= 1}
-                    onClick={() => changeQuantity(item.id, -1)}
-                  >
-                    −
-                  </button>
+            {loading && <p role="status">Loading products...</p>}
+            {error && <p role="alert">Could not load products: {error}</p>}
 
-                  <span aria-label={`${item.name} quantity`}>
-                    {item.quantity}
-                  </span>
+            {!loading && !error && products.length === 0 && (
+              <p>No products found.</p>
+            )}
 
-                  <button
-                    type="button"
-                    aria-label={`Increase ${item.name} quantity`}
-                    disabled={
-                      item.quantity >=
-                      (products.find((p) => p.id === item.id)?.stock ?? 0)
-                    }
-                    onClick={() => changeQuantity(item.id, 1)}
-                  >
-                    +
-                  </button>
+            {!loading && !error && products.length > 0 && (
+              <section className="products" aria-label="Products">
+                {products.map((product) => {
+                  const quantityInCart =
+                    cart.find((item) => item.id === product.id)?.quantity ?? 0;
+                  const outOfStock = quantityInCart >= product.stock;
 
-                  <button
-                    type="button"
-                    className="remove-button"
-                    onClick={() => removeFromCart(item.id)}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </article>
-            ))}
+                  return (
+                    <article
+                      className="product-card"
+                      key={product.id}
+                      data-testid="product-card"
+                    >
+                      <div className="product-image" aria-hidden="true">
+                        {product.name === "Laptop"
+                          ? "💻"
+                          : product.name === "Keyboard"
+                            ? "⌨️"
+                            : "🖱️"}
+                      </div>
 
-            <h3 data-testid="cart-total">Total: £{cartTotal.toFixed(2)}</h3>
+                      <h3>{product.name}</h3>
+                      <p>{product.description}</p>
+                      <p className="price">
+                        £{Number(product.price).toFixed(2)}
+                      </p>
+                      <p className="stock">
+                        In stock: {product.stock - quantityInCart}
+                      </p>
+
+                      <button
+                        type="button"
+                        aria-label={`Add ${product.name} to cart`}
+                        disabled={product.stock === 0 || outOfStock}
+                        onClick={() => addToCart(product)}
+                      >
+                        {product.stock === 0
+                          ? "Out of Stock"
+                          : outOfStock
+                            ? "Stock Limit Reached"
+                            : "Add to Cart"}
+                      </button>
+                    </article>
+                  );
+                })}
+              </section>
+            )}
           </>
         )}
-      </section>
+      </div>
     </main>
   );
 }

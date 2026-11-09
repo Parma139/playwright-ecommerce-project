@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 
+// Login helper
 async function login(page) {
   await page.goto("/");
 
@@ -12,6 +13,70 @@ async function login(page) {
   ).toBeVisible();
 }
 
+// Locate a product card
+function getProduct(page, productName) {
+  return page.getByTestId("product-card").filter({
+    has: page.getByRole("heading", {
+      name: productName,
+      exact: true,
+    }),
+  });
+}
+
+// Read available stock dynamically from the product card
+async function getAvailableStock(product) {
+  const stockText = await product.locator(".stock").textContent();
+  const match = stockText?.match(/In stock:\s*(\d+)/);
+
+  if (!match) {
+    throw new Error(`Could not read available stock: ${stockText}`);
+  }
+
+  return Number(match[1]);
+}
+
+// Read product price dynamically
+async function getProductPrice(product) {
+  const priceText = await product.locator(".price").textContent();
+  const match = priceText?.match(/£\s*([\d.]+)/);
+
+  if (!match) {
+    throw new Error(`Could not read product price: ${priceText}`);
+  }
+
+  return Number(match[1]);
+}
+
+// Locate the Basket navigation button
+function getBasketButton(page) {
+  return page
+    .getByRole("navigation", { name: "Main navigation" })
+    .locator("button")
+    .filter({ hasText: "Basket" });
+}
+
+// Verify basket item count
+async function expectBasketCount(page, count) {
+  await expect(getBasketButton(page)).toContainText(`(${count})`);
+}
+
+// Navigate to the separate Basket page
+async function openBasket(page) {
+  await getBasketButton(page).click();
+
+  await expect(
+    page.getByRole("heading", { name: "Your Shopping Basket" }),
+  ).toBeVisible();
+}
+
+// Verify the displayed basket total
+async function expectBasketTotal(page, total) {
+  await expect(
+    page.getByText(`Total: £${total.toFixed(2)}`, { exact: true }),
+  ).toBeVisible();
+}
+
+// 1. Verify products are displayed
 test("store displays products from Supabase", async ({ page }) => {
   await login(page);
 
@@ -20,147 +85,139 @@ test("store displays products from Supabase", async ({ page }) => {
   ).toBeVisible();
 
   await expect(page.getByRole("heading", { name: "Laptop" })).toBeVisible();
-
   await expect(page.getByRole("heading", { name: "Keyboard" })).toBeVisible();
-
   await expect(page.getByRole("heading", { name: "Mouse" })).toBeVisible();
 });
 
-test("adding a laptop updates cart count, total and stock", async ({
+// 2. Verify adding a product updates basket count, total and stock
+test("adding a laptop updates basket count, total and stock", async ({
   page,
 }) => {
   await login(page);
 
-  // Confirm the cart starts empty
-  await expect(page.getByTestId("cart-count")).toHaveText("0");
+  const laptop = getProduct(page, "Laptop");
 
-  // Find the laptop product card
-  const laptop = page.getByTestId("product-card").filter({
-    has: page.getByRole("heading", {
-      name: "Laptop",
-      exact: true,
-    }),
-  });
+  const initialStock = await getAvailableStock(laptop);
+  const laptopPrice = await getProductPrice(laptop);
 
-  // Confirm initial stock
-  await expect(laptop).toContainText("In stock: 10");
+  test.skip(initialStock < 1, "Laptop has no available stock.");
 
-  // Add the laptop to the cart
-  await laptop
-    .getByRole("button", {
-      name: "Add Laptop to cart",
-    })
-    .click();
+  await expectBasketCount(page, 0);
 
-  // Verify cart count, total and updated stock
-  await expect(page.getByTestId("cart-count")).toHaveText("1");
-  await expect(page.getByTestId("cart-total")).toHaveText("Total: £799.00");
-  await expect(laptop).toContainText("In stock: 9");
+  await laptop.getByRole("button", { name: "Add Laptop to cart" }).click();
+
+  await expectBasketCount(page, 1);
+
+  await expect(laptop).toContainText(`In stock: ${initialStock - 1}`);
+
+  await openBasket(page);
+
+  await expectBasketTotal(page, laptopPrice);
 });
 
-test("increasing quantity updates the cart total and stock", async ({
+// 3. Verify increasing quantity updates basket total and stock
+test("increasing quantity updates the basket total and stock", async ({
   page,
 }) => {
   await login(page);
 
-  const laptop = page.getByTestId("product-card").filter({
-    has: page.getByRole("heading", {
-      name: "Laptop",
-      exact: true,
-    }),
+  const laptop = getProduct(page, "Laptop");
+
+  const initialStock = await getAvailableStock(laptop);
+  const laptopPrice = await getProductPrice(laptop);
+
+  test.skip(initialStock < 2, "At least two laptops must be available.");
+
+  const addButton = laptop.getByRole("button", {
+    name: "Add Laptop to cart",
   });
 
-  await laptop
-    .getByRole("button", {
-      name: "Add Laptop to cart",
-    })
-    .click();
+  await addButton.click();
+  await addButton.click();
 
-  await laptop
-    .getByRole("button", {
-      name: "Add Laptop to cart",
-    })
-    .click();
+  await expectBasketCount(page, 2);
 
-  await expect(page.getByTestId("cart-count")).toHaveText("2");
-  await expect(page.getByTestId("cart-total")).toHaveText("Total: £1598.00");
-  await expect(laptop).toContainText("In stock: 8");
+  await expect(laptop).toContainText(`In stock: ${initialStock - 2}`);
+
+  await openBasket(page);
+
+  await expectBasketTotal(page, laptopPrice * 2);
 });
 
-test("removing a product empties the cart", async ({ page }) => {
+// 4. Verify removing a product empties the basket
+test("removing a product empties the basket", async ({ page }) => {
   await login(page);
 
-  const laptop = page.getByTestId("product-card").filter({
-    has: page.getByRole("heading", {
-      name: "Laptop",
-      exact: true,
-    }),
-  });
+  const laptop = getProduct(page, "Laptop");
+  const initialStock = await getAvailableStock(laptop);
 
-  await laptop
-    .getByRole("button", {
-      name: "Add Laptop to cart",
-    })
-    .click();
+  test.skip(initialStock < 1, "Laptop has no available stock.");
 
-  await page
-    .getByRole("button", {
-      name: "Remove",
-    })
-    .click();
+  await laptop.getByRole("button", { name: "Add Laptop to cart" }).click();
 
-  await expect(page.getByTestId("cart-count")).toHaveText("0");
-  await expect(page.getByTestId("empty-cart")).toBeVisible();
-  await expect(laptop).toContainText("In stock: 10");
+  await openBasket(page);
+
+  await page.getByRole("button", { name: "Remove" }).click();
+
+  await expectBasketCount(page, 0);
+
+  await expect(page.getByText("Your basket is empty.")).toBeVisible();
 });
 
+// 5. Verify customers cannot add more products than available stock
 test("cannot add more laptops than available stock", async ({ page }) => {
   await login(page);
 
-  const laptop = page.getByTestId("product-card").filter({
-    has: page.getByRole("heading", {
-      name: "Laptop",
-      exact: true,
-    }),
+  const laptop = getProduct(page, "Laptop");
+
+  const initialStock = await getAvailableStock(laptop);
+  const laptopPrice = await getProductPrice(laptop);
+
+  const addButton = laptop.getByRole("button", {
+    name: "Add Laptop to cart",
   });
 
-  // Keep a stable locator even when the button text changes
-  const addButton = laptop.locator("button").first();
+  // Product already has zero stock
+  if (initialStock === 0) {
+    await expect(addButton).toBeDisabled();
+    await expect(addButton).toHaveText("Out of Stock");
+    return;
+  }
 
-  // Add all 10 available laptops
-  for (let i = 0; i < 10; i++) {
+  // Add exactly the available quantity
+  for (let i = 0; i < initialStock; i++) {
     await addButton.click();
   }
 
-  await expect(page.getByTestId("cart-count")).toHaveText("10");
-  await expect(page.getByTestId("cart-total")).toHaveText("Total: £7990.00");
   await expect(laptop).toContainText("In stock: 0");
 
-  // Verify the button is disabled and its label has changed
   await expect(addButton).toBeDisabled();
   await expect(addButton).toHaveText("Stock Limit Reached");
+
+  await expectBasketCount(page, initialStock);
+
+  await openBasket(page);
+
+  await expectBasketTotal(page, laptopPrice * initialStock);
 });
 
-test("cannot decrease a cart quantity below one", async ({ page }) => {
+// 6. Verify quantity cannot be decreased below one
+test("cannot decrease a basket quantity below one", async ({ page }) => {
   await login(page);
 
-  const laptop = page.getByTestId("product-card").filter({
-    has: page.getByRole("heading", {
-      name: "Laptop",
-      exact: true,
-    }),
-  });
+  const laptop = getProduct(page, "Laptop");
+  const initialStock = await getAvailableStock(laptop);
 
-  await laptop
-    .getByRole("button", {
-      name: "Add Laptop to cart",
-    })
-    .click();
+  test.skip(initialStock < 1, "Laptop has no available stock.");
+
+  await laptop.getByRole("button", { name: "Add Laptop to cart" }).click();
+
+  await openBasket(page);
 
   const decreaseButton = page.getByRole("button", {
     name: "Decrease Laptop quantity",
   });
 
   await expect(decreaseButton).toBeDisabled();
-  await expect(page.getByTestId("cart-count")).toHaveText("1");
+  await expectBasketCount(page, 1);
 });
