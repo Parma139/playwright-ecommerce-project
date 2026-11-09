@@ -102,3 +102,26 @@ export async function getOrderHistory() {
 
   return data;
 }
+
+/**
+ * Cancels an order and restores its stock through Supabase.
+ *
+ * @param {string} orderId - UUID of the order to cancel.
+ */
+export async function cancelDemoOrder(orderId) {
+  if (!orderId) {
+    throw new Error("Order ID is required.");
+  }
+
+  const { data, error } = await supabase.rpc("cancel_demo_order", {
+    p_order_id: orderId,
+  });
+
+  if (error) throw error;
+
+  if (!data || data.length === 0) {
+    throw new Error("No cancellation confirmation was returned.");
+  }
+
+  return data[0];
+}

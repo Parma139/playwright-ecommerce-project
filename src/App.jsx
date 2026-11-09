@@ -27,8 +27,17 @@ export default function App() {
   const [currentPage, setCurrentPage] = React.useState("shop");
 
   React.useEffect(() => {
-    function handlePopState() {
+    async function handlePopState() {
       const page = window.history.state?.page || "shop";
+
+      if (page === "shop" || page === "basket") {
+        try {
+          await refreshProducts();
+        } catch {
+          setError("Could not refresh product information. Please try again.");
+        }
+      }
+
       setCurrentPage(page);
     }
 
@@ -38,6 +47,7 @@ export default function App() {
       window.removeEventListener("popstate", handlePopState);
     };
   }, []);
+
   // Restore the Supabase session after refresh and listen for auth changes.
   React.useEffect(() => {
     let mounted = true;
@@ -206,29 +216,48 @@ export default function App() {
     setCartMessage("Product removed from cart.");
   }
 
-  async function handleOrderSuccess(order) {
-    // Save the confirmation details.
-    setOrderConfirmation(order);
-    setCart([]);
-    setCartMessage("");
-    navigateTo("confirmation");
-
+  // Refresh product data after stock changes, including order cancellation.
+  async function refreshProducts() {
     const { data, error: productError } = await supabase
       .from("products")
       .select("id, name, description, price, stock")
       .order("id");
 
     if (productError) {
-      setError("Order placed, but product stock could not be refreshed.");
-      return;
+      setError("Product stock could not be refreshed.");
+      throw productError;
     }
 
     setProducts(data ?? []);
   }
-  function navigateTo(page) {
+
+  async function handleOrderSuccess(order) {
+    setOrderConfirmation(order);
+    setCart([]);
+    setCartMessage("");
+    navigateTo("confirmation");
+
+    try {
+      await refreshProducts();
+    } catch {
+      setError("Order placed, but product stock could not be refreshed.");
+    }
+  }
+
+  async function navigateTo(page) {
     window.history.pushState({ page }, "", `#${page}`);
+
+    if (page === "shop" || page === "basket") {
+      try {
+        await refreshProducts();
+      } catch {
+        setError("Could not refresh product information. Please try again.");
+      }
+    }
+
     setCurrentPage(page);
   }
+
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const cartTotal = cart.reduce(
@@ -352,7 +381,7 @@ export default function App() {
             }}
           />
         ) : currentPage === "orders" ? (
-          <OrderHistory />
+          <OrderHistory onOrderCancelled={refreshProducts} />
         ) : currentPage === "basket" ? (
           <Basket
             items={cart}

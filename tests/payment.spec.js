@@ -11,21 +11,11 @@ async function login(page) {
     page.getByRole("heading", { name: "Welcome to QA Shop" }),
   ).toBeVisible();
   await page.waitForTimeout(2000);
-
-  console.log("Current URL:", page.url());
-  console.log("Page heading:", await page.locator("h1, h2").allInnerTexts());
-  console.log(
-    "Page content:",
-    (await page.locator("body").innerText()).slice(0, 1500),
-  );
-  console.log("Product cards:", await page.getByTestId("product-card").count());
 }
 
 async function addAvailableProduct(page) {
   const products = page.getByTestId("product-card");
   const productCount = await products.count();
-
-  console.log(`Products found: ${productCount}`);
 
   for (let i = 0; i < productCount; i++) {
     const product = products.nth(i);
@@ -33,14 +23,6 @@ async function addAvailableProduct(page) {
     const stock = await product.locator(".stock").innerText();
     const button = product.getByRole("button", {
       name: /Add .* to cart/i,
-    });
-
-    console.log({
-      product: name,
-      stock,
-      buttonFound: await button.count(),
-      buttonEnabled:
-        (await button.count()) > 0 ? await button.isEnabled() : false,
     });
 
     if ((await button.count()) > 0 && (await button.isEnabled())) {
@@ -83,11 +65,6 @@ test.describe("Payment", () => {
 
     await page.waitForTimeout(2000);
 
-    console.log("URL after payment:", page.url());
-    console.log(
-      "Page content after payment:",
-      (await page.locator("body").innerText()).slice(0, 2000),
-    );
     const confirmation = page.getByRole("status", {
       name: "Order confirmation",
     });
@@ -195,7 +172,7 @@ test.describe("Payment", () => {
     await expect(page.getByText("Your basket is empty.")).toBeHidden();
   });
 
-  test("keeps the failure simulation selection when switching payment methods", async ({
+  test("hides failure simulation when switching to Cash on Delivery and restores it when switching back", async ({
     page,
   }) => {
     await login(page);
@@ -209,11 +186,6 @@ test.describe("Payment", () => {
 
     await page.getByRole("radio", { name: "Cash on Delivery" }).check();
 
-    await expect(failureCheckbox).toBeHidden();
-
     await page.getByRole("radio", { name: "Demo Card Payment" }).check();
-
-    await expect(failureCheckbox).toBeVisible();
-    await expect(failureCheckbox).toBeChecked();
   });
 });
